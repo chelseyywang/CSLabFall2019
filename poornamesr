@@ -1,0 +1,212 @@
+#!/bin/bash
+
+dir=.
+if [ $# -gt 2 ]
+then
+    >&2 echo "too many args"
+    exit 1
+#elif [ $# -eq 0 ]
+#then
+#    dir=`pwd`
+elif [ $# -eq 1 ]
+then
+   # if [ "$dir" == "-r" ]
+   # then
+   #     $2=`pwd`
+    if [ ! -d $1 ] && [ "$1" != "-r" ]
+    then
+        >&2 echo "not a directory"
+        exit 1
+#    elif [ "$1" != "-r" ]
+ #   then
+  #      $dir=`pwd`
+    elif [ -L "$1" ]
+    then
+        >&2 echo "is a symlink"
+        exit 1
+    fi
+elif [ $# -eq 2 ]
+then
+    if [ $1 != "-r" ]
+    then
+        >&2 echo "not -r"
+        exit 1
+    elif [ ! -d $2 ]
+    then
+        >&2 echo "not a directory"
+        exit 1
+    elif [ -L  $2 ]
+    then
+        >&2 echo "is a symlink"
+        exit 1
+    fi
+elif [ $# -lt 0 ]
+then
+    >&2 echo "negative parameters"
+    exit 1
+fi
+
+
+
+#THINGS THAT WORK
+lbool=false
+sbool=false
+#if recursive 
+if [ $# -eq 2 ] && [ $1 == "-r" ]
+then
+	#should be fine
+	find $2 -type d | tr 'A-Z' 'a-z' | 
+	sort | uniq -d | sed 's/$/\//'
+	find $2 -type f | tr 'A-Z' 'a-z' | 
+	sort | uniq -d
+	#cannot start with -
+	#should be ok becuase i can't mkdir or touch a -smth  
+	find $2 -type d | grep -E "/-.*$" | sed 's/$/\//'
+	find $2 -type f | grep -E "/-.*$"
+
+	#only ascii, . , '-', '_'
+	find $2 -type d | 
+	grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$" | sed 's/$/\//'
+	find $2 -type f | grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$"
+	#cannot be more than fifteen
+	#NO BUENO
+	find $2 -type d | grep -E "^(.+)/([^/]{15,})$" | sed 's/$/\//'
+	find $2 -type f | grep -E "^(.+)/([^/]{15,})$"
+
+	#other than . and .. ; files cannot start with '.'
+	find $2 -type d | grep -Ev "(/\.|/\.\.)$" | grep -E "/\..*$" | 
+	sed 's/$/\//'
+	find $2 -type f | grep -Ev "(/\.|/\.\.)$" | grep -E "/\..*$"
+
+
+	#sstring="$2"
+        #llength=${#sstring}
+	#vvalid='a-zA-Z .,-_'
+
+        #if [ $llength  -gt 14 ]
+        #then
+        #        echo "1true" $sstring"/"
+	#	lbool=true
+        #elif [[ ! $sstring =~ [^$vvalid] ]] 
+        #then
+         #       echo "11true" $sstring"/"
+	#	lbool=true
+        #fi
+
+
+#if only one argument, -r
+elif [ $# -eq 1 ] && [ "$1" == "-r" ] 
+then
+	find `pwd` -type d | tr 'A-Z' 'a-z' | 
+	sort | uniq -d | sed 's/$/\//'
+	find `pwd` -type f | tr 'A-Z' 'a-z' | sort | uniq -d
+        #cannot start with -
+	find `pwd` -type d | grep -E "/-.*$" | sed 's/$/\//'
+        find `pwd` -type f | grep -E "/-.*$"
+
+        #only ascii, . , '-', '_'
+        find `pwd` -type d | 
+	grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$" | sed 's/$/\//'
+	find `pwd` -type f | 
+	grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$"
+        #cannot be more than fifteen
+        find `pwd` -type d | 
+	grep -E "^(.+)/([^/]{15,})$" | sed 's/$/\//'
+	find `pwd` -type f | grep -E "^(.+)/([^/]{15,})$"
+
+        #other than . and .. ; files cannot start with '.'
+        find `pwd` -type d | grep -Ev "(/\.|/\.\.)$" | 
+	grep -E "/\..*$" | sed 's/$/\//'
+	find `pwd` -type f | 
+	grep -Ev "(/\.|/\.\.)$" | grep -E "/\..*$"
+
+
+
+#if only one(or none) argument that is a directory and NOT recursive 
+elif [ $# -eq 1 ] && [ "$1" != "-r" ]
+then
+	#checking if there are duplicates P P
+	find $1  -mindepth 1 -maxdepth 1 -type d | 
+	tr 'A-Z' 'a-z' | sort | uniq -d | sed 's/$/\//'
+	find $1  -mindepth 1 -maxdepth 1 -type f | 
+	tr 'A-Z' 'a-z' | sort | uniq -d
+
+	#only good for basic
+	find $1 -mindepth 1 -maxdepth 1 -type d | 
+	grep -E "/-.*$" | sed 's/$/\//'
+	find $1 -mindepth 1 -maxdepth 1 -type f | 
+	grep -E "/-.*$"
+
+	#only ascii, . , '-', '_'
+	find $1 -mindepth 1 -maxdepth 1 -type d | 
+	grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$" | sed 's/$/\//'
+
+	find $1 -mindepth 1 -maxdepth 1 -type f | 
+	grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$"
+
+	#cannot be more than fifteen P P
+	find $1 -mindepth 1 -maxdepth 1 -type d | 
+	grep -E "^(.+)/([^/]{15,})$" | sed 's/$/\//'
+	find $1 -mindepth 1 -maxdepth 1 -type f | 
+	grep -E "^(.+)/([^/]{15,})$"
+
+	#other than . and .. ; files cannot start with '.' P P
+	find $1 -mindepth 1 -maxdepth 1 -type d | 
+	grep -Ev "(/\.|/\.\.)$" | grep -E "/\..*$" | sed 's/$/\//'
+	find $1 -mindepth 1 -maxdepth 1 -type f | 
+	grep -Ev "(/\.|/\.\.)$" | grep -E "/\..*$"
+
+	string="$1"
+        length=${#string}
+	valid='a-zA-Z .,-_'
+	
+        if [ $length  -gt 14 ]
+        then
+		if [ "$sbool" != true ] 
+                then
+			echo $string"/"
+		fi
+  
+        elif [[ ! $string =~ [^$valid] ]]
+        then
+		if [ "$lbool" != true ]
+                then
+			echo $string"/"
+		fi
+        fi
+elif [ $# -eq 0 ]
+then
+    	#checking if there are duplicates P P
+        find .  -mindepth 1 -maxdepth 1 -type d |
+        tr 'A-Z' 'a-z' | sort | uniq -d | sed 's/$/\//'
+        find .  -mindepth 1 -maxdepth 1 -type f |
+        tr 'A-Z' 'a-z' | sort | uniq -d
+
+        #only good for basic
+        find . -mindepth 1 -maxdepth 1 -type d |
+        grep -E "/-.*$" | sed 's/$/\//'
+        find . -mindepth 1 -maxdepth 1 -type f |
+        grep -E "/-.*$"
+
+        #only ascii, . , '-', '_'
+        find . -mindepth 1 -maxdepth 1 -type d |
+        grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$" | sed 's/$/\//'
+
+        find . -mindepth 1 -maxdepth 1 -type f |
+        grep -Ev "^(.+)/([A-Z]|[a-z]|\.|\-|\_|\/)*$"
+
+        #cannot be more than fifteen P P
+        find . -mindepth 1 -maxdepth 1 -type d |
+        grep -E "^(.+)/([^/]{15,})$" | sed 's/$/\//'
+        find . -mindepth 1 -maxdepth 1 -type f |
+        grep -E "^(.+)/([^/]{15,})$"
+
+        #other than . and .. ; files cannot start with '.' P P
+        find . -mindepth 1 -maxdepth 1 -type d |
+    	grep -Ev "(/\.|/\.\.)$" | grep -E "/\..*$" | sed 's/$/\//'
+        find . -mindepth 1 -maxdepth 1 -type f |
+        grep -Ev "(/\.|/\.\.)$" | grep -E "/\..*$"
+
+
+fi
+exit 0
